@@ -28,6 +28,7 @@ def conv3d(
     from torchsparse.nn import functional as F
 
     feats, coords = input.feats, input.coords
+    assert feats.shape[1] == weight.shape[-2] # weight might be 2-d or 3-d, (..., in_channels, out_channels)
     kernel_size = make_ntuple(kernel_size, ndim=3)
     # kernel_volume = np.prod(kernel_size)
     stride = make_ntuple(stride, ndim=3)

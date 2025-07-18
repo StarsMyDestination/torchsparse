@@ -28,12 +28,14 @@ def set_allow_negative_coordinates(allow_negative_coordinates):
 
 class SparseTensor:
     def __init__(
-        self,
-        feats: torch.Tensor,
-        coords: torch.Tensor,
-        stride: Union[int, Tuple[int, ...]] = 1,
-        spatial_range: Union[int, Tuple[int, ...]] = None,
+            self,
+            feats: torch.Tensor,
+            coords: torch.Tensor,
+            stride: Union[int, Tuple[int, ...]] = 1,
+            spatial_range: Union[int, Tuple[int, ...]] = None,
     ) -> None:
+        assert feats.ndim == coords.ndim == 2, f'{feats.ndim} or {coords.ndim} != 2'
+        assert feats.shape[0] == coords.shape[0], f"{feats.shape[0]} != {coords.shape[0]}"
         self.feats = feats
         self.coords = coords
         self.stride = make_ntuple(stride, ndim=3)
@@ -50,6 +52,10 @@ class SparseTensor:
             self._caches = _caches
         else:
             self._caches = TensorCache()
+
+    def set_caches(self, caches):
+        self._caches = caches
+        return self
 
     @property
     def F(self) -> torch.Tensor:
@@ -70,6 +76,14 @@ class SparseTensor:
     @property
     def s(self) -> Tuple[int, ...]:
         return self.stride
+
+    @property
+    def device(self):
+        return self.feats.device
+
+    @property
+    def dtype(self):
+        return self.feats.dtype
 
     @s.setter
     def s(self, stride: Union[int, Tuple[int, ...]]) -> None:
@@ -112,9 +126,12 @@ class SparseTensor:
         )
         output._caches = self._caches
         return output
-    
+
+
 class PointTensor:
     def __init__(self, feats, coords, idx_query=None, weights=None):
+        assert feats.ndim == coords.ndim == 2, f'{feats.ndim} or {coords.ndim} != 2'
+        assert feats.shape[0] == coords.shape[0], f"{feats.shape[0]} != {coords.shape[0]}"
         self.F = feats
         self.C = coords
         self.idx_query = idx_query if idx_query is not None else {}
@@ -143,4 +160,3 @@ class PointTensor:
                              self.weights)
         tensor.additional_features = self.additional_features
         return tensor
-
